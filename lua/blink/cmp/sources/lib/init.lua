@@ -321,8 +321,8 @@ function sources.get_lsp_capabilities(override, include_nvim_defaults)
             },
           },
           insertTextModeSupport = {
-            -- todo: support adjustIndentation
-            valueSet = { 1 }, -- asIs
+            -- vim.snippet.expand() adjusts indentation for multiline snippets
+            valueSet = { 2 }, -- adjustIndentation
           },
           labelDetailsSupport = true,
         },
@@ -337,7 +337,7 @@ function sources.get_lsp_capabilities(override, include_nvim_defaults)
         },
 
         contextSupport = true,
-        insertTextMode = 1, -- asIs
+        insertTextMode = 2, -- adjustIndentation
       },
     },
   }, override or {})
