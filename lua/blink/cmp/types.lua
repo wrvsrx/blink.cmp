@@ -6,6 +6,7 @@
 --- @field source_id string
 --- @field source_name string
 --- @field cursor_column number
+--- @field line? string Request line used to compensate edits in the client encoding
 --- @field client_id? number
 --- @field client_name? string
 --- @field kind_name? string

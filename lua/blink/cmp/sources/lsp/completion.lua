@@ -45,6 +45,7 @@ local function process_response(context, client, res)
     -- we must set the cursor column because this will be cached and used later
     -- by default, blink.cmp will use the cursor column at the time of the request
     item.cursor_column = context.cursor[2]
+    item.line = context.line
 
     -- score offset for deprecated items
     -- todo: make configurable

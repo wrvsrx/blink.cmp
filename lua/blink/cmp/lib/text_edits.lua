@@ -157,7 +157,9 @@ function text_edits.get_from_item(item)
   --- @cast text_edit lsp.TextEdit
 
   local offset_encoding = text_edits.offset_encoding_from_item(item)
-  text_edit = text_edits.compensate_for_cursor_movement(text_edit, item.cursor_column, context.get_cursor()[2])
+  text_edit = text_edits.compensate_for_cursor_movement(
+    text_edit, item.cursor_column, context.get_cursor()[2], offset_encoding, item.line
+  )
 
   -- convert the offset encoding to utf-8
   -- TODO: we have to do this last because it applies a max on the position based on the length of the line
@@ -176,11 +178,23 @@ end
 --- @param text_edit lsp.TextEdit
 --- @param old_cursor_col number Position of the cursor when the text edit was created
 --- @param new_cursor_col number New position of the cursor
+--- @param offset_encoding? 'utf-8'|'utf-16'|'utf-32'
+--- @param old_line? string Line at the time of old_cursor_col
 --- @return lsp.TextEdit
-function text_edits.compensate_for_cursor_movement(text_edit, old_cursor_col, new_cursor_col)
+function text_edits.compensate_for_cursor_movement(text_edit, old_cursor_col, new_cursor_col, offset_encoding, old_line)
   text_edit = vim.deepcopy(text_edit)
 
   local offset = new_cursor_col - old_cursor_col
+  if offset_encoding ~= nil and offset_encoding ~= 'utf-8' and old_line ~= nil then
+    -- The edit still uses the client encoding; cursor columns are byte offsets.
+    -- Keep the request line because replaced/deleted text may no longer exist.
+    local function character_column(line, col)
+      if vim.fn.has('nvim-0.11.0') == 1 then return vim.str_utfindex(line, offset_encoding, col, false) end
+      local utf32, utf16 = vim.str_utfindex(line, math.min(col, #line))
+      return offset_encoding == 'utf-16' and utf16 or utf32
+    end
+    offset = character_column(context.get_line(), new_cursor_col) - character_column(old_line, old_cursor_col)
+  end
   text_edit.range['end'].character = text_edit.range['end'].character + offset
 
   return text_edit
